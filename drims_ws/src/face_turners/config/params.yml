@@ -1,0 +1,20 @@
+topics:
+  img_topic: "/color/video/image"
+  dice_detection_topic: "/dice_detection"
+
+detector:
+  # Color detection parameters
+  hue_range: [20, 40] # Yellow color range in HSV
+  saturation_range: [130, 255]
+  value_range: [150, 255]
+
+  # Parameters for the blobs/dice points detector
+  min_point_area: 50
+  max_point_area: 400
+  min_inertia_ratio: 0.7
+  min_circularity: 0.85
+  dbscan_eps: 80.0
+
+robot:
+  robot_name: "ur10e"
+  robot_ip: "192.168.254.100"
