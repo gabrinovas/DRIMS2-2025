@@ -6,8 +6,8 @@ from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
-from face_turners.core.dice_detector import DiceDetector, DieDetection
-from face_turners_msgs.msg import DieDetection
+from face_turners.core.dice_detector import DiceDetector
+from drims2_msgs.srv import DiceIdentification
 
 import cv2 as cv
 import numpy as np
@@ -21,9 +21,23 @@ class DiceDetectorNode(Node):
         
         # Input/Output topics
         self.declare_parameter('img_topic', '/color/video/image')
-        self.declare_parameter('dice_detection_topic', '/dice_detection')
+        self.declare_parameter('dice_detection_mask_topic', '/dice_detection_mask')
+        self.declare_parameter('dice_detection_img_topic', '/dice_detection_img')
+        self.declare_parameter('dice_detection_srv_topic', '/dice_detection_pose')
         input_img_topic = self.get_parameter('img_topic').get_parameter_value().string_value
-        dice_detection_topic = self.get_parameter('dice_detection_topic').get_parameter_value().string_value
+        dice_detection_mask_topic = self.get_parameter('dice_detection_mask_topic').get_parameter_value().string_value
+        dice_detection_img_topic = self.get_parameter('dice_detection_img_topic').get_parameter_value().string_value
+        dice_detection_srv_topic = self.get_parameter('dice_detection_srv_topic').get_parameter_value().string_value
+
+        # Camera parameters
+        self.declare_parameter('die_size', 0.03)
+        self.declare_parameter('K', [1578.55692, 0.0, 952.440456, 0.0, 1582.46225, 545.655012, 0.0, 0.0, 1.0])
+        self.declare_parameter('d', [0.07206577, 0.08106335, 0.00300317, 0.00042163, -0.40383728])
+        self.declare_parameter('T_c2w', [0.998855, -0.019105, 0.043869, -0.236381, 0.020615, 0.999201, -0.034238, -0.214228, -0.043180, 0.035103, 0.998450, 0.742136, 0.0, 0.0, 0.0, 1.0])
+        die_size = self.get_parameter('die_size').get_parameter_value().double_value
+        K = np.array(self.get_parameter('K').get_parameter_value().double_array_value).reshape((3, 3))
+        d = np.array(self.get_parameter('d').get_parameter_value().double_array_value).reshape((5,))
+        T_c2w = np.array(self.get_parameter('T_c2w').get_parameter_value().double_array_value).reshape((4, 4))
 
         # Color detection parameters
         self.declare_parameter('hue_range', (20, 40)) # Yellow color range in HSV
@@ -61,7 +75,11 @@ class DiceDetectorNode(Node):
             blob_detector=params,
             dbscan_eps=dbscan_eps,
             lower_hsv=lower_hsv,
-            upper_hsv=upper_hsv
+            upper_hsv=upper_hsv,
+            K=K,
+            d=d,
+            T_c2w=T_c2w,
+            die_size=die_size
         )
 
         self.cv_bridge_ = CvBridge()
@@ -69,8 +87,13 @@ class DiceDetectorNode(Node):
         self.create_subscription(Image, input_img_topic, lambda msg: self.frames_stack_.append(msg), 10) # Avoid processing inside subscribers callbacks
 
         # Publisher and timer for the dice detection
-        self.dice_pub_ = self.create_publisher(DieDetection, dice_detection_topic, 10)
+        self.dice_imgs_pub_ = self.create_publisher(Image, dice_detection_img_topic, 10)
+        self.dice_masks_pub_ = self.create_publisher(Image, dice_detection_mask_topic, 10)
         self.create_timer(0.01, self.detec_dice)
+
+        # Create a service for the on-demand pose-detection
+        self.last_dice_detections_ = deque(maxlen=1)
+        self.dice_detection_srv_ = self.create_service(DiceIdentification, dice_detection_srv_topic, self.dice_identification_cb)
 
         self.get_logger().info("Dice Detector Node Initialized")
 
@@ -81,18 +104,27 @@ class DiceDetectorNode(Node):
             return
         img = self.cv_bridge_.imgmsg_to_cv2(img_frame, desired_encoding='bgr8')
 
-        dice = self.dice_detector_.get_dice_from_blobs(img)
+        dice, dice_imgs, dice_masks = self.dice_detector_.get_dice_from_blobs(img)
 
         # Publish the detected dice detections
-        stamp = self.get_clock().now().to_msg()
-        for i, die in enumerate(dice):
-            detection_msg = DieDetection()
-            detection_msg.header.frame_id = f"die_{i}"
-            detection_msg.header.stamp = stamp
-            detection_msg.face_number = die.face_number
-            detection_msg.centroid = die.centroid.tolist()
-            detection_msg.yaw = float(die.yaw)
-            self.dice_pub_.publish(detection_msg)
+        for die_img, die_mask in zip(dice_imgs, dice_masks):
+            self.dice_imgs_pub_.publish(self.cv_bridge_.cv2_to_imgmsg(die_img, encoding='bgr8'))
+            self.dice_masks_pub_.publish(self.cv_bridge_.cv2_to_imgmsg(die_mask, encoding='mono8'))
+
+        # Save the last detection for the service
+        self.last_dice_detections_.append(dice)
+
+    def dice_identification_cb(self, request, response):
+        if not self.last_dice_detections_:
+            response.success = False
+            return response
+
+        # Get the last detection result
+        last_detection = self.last_dice_detections_[-1]
+        response.detections = last_detection
+        response.success = True
+        return response
+
 
 def main(args=None):
     rclpy.init(args=args)

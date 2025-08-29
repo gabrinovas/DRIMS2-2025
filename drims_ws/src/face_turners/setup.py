@@ -27,7 +27,6 @@ setup(
     entry_points={
         'console_scripts': [
             'dice_detector_node = face_turners.dice_detector_node:main',
-            'gui_node = face_turners.gui_node:main',
         ],
     },
 )

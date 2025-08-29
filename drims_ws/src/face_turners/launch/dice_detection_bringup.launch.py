@@ -22,6 +22,9 @@ def launch_setup(context):
 
     topics_cf = config['topics']
     detector_cf = config['detector']
+    robot_cf = config['robot']
+
+    camera_cf = config['camera'][robot_cf["robot_id"]]
 
     dice_detector_node = Node(
         package="face_turners", 
@@ -30,7 +33,9 @@ def launch_setup(context):
         output="screen",
         parameters=[
             {"img_topic":  topics_cf["img_topic"]},
-            {"dice_detection_topic": topics_cf["dice_detection_topic"]},
+            {"dice_detection_mask_topic": topics_cf["dice_detection_mask_topic"]},
+            {"dice_detection_img_topic": topics_cf["dice_detection_img_topic"]},
+            {"dice_detection_srv_topic": topics_cf["dice_detection_srv_topic"]},
             {"hue_range": detector_cf["hue_range"]},
             {"saturation_range": detector_cf["saturation_range"]},
             {"value_range": detector_cf["value_range"]},
@@ -39,6 +44,9 @@ def launch_setup(context):
             {"min_inertia_ratio": detector_cf["min_inertia_ratio"]},
             {"min_circularity": detector_cf["min_circularity"]},
             {"dbscan_eps": detector_cf["dbscan_eps"]},
+            {"K": camera_cf["K"]},
+            {"d": camera_cf["d"]},
+            {"T_c2w": camera_cf["T_c2w"]},
             {"use_sim_time": LaunchConfiguration("fake")}
         ],
     )
