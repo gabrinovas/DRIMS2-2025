@@ -1,5 +1,6 @@
 topics:
   img_topic: "/color/video/image"
+  base_frame: "checkerboard"
   dice_detection_mask_topic: "/dice_detection_mask"
   dice_detection_img_topic: "/dice_detection_img"
   dice_detection_srv_topic: "/dice_detection_pose"

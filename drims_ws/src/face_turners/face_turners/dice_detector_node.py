@@ -5,9 +5,12 @@ import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-
-from face_turners.core.dice_detector import DiceDetector
 from drims2_msgs.srv import DiceIdentification
+from geometry_msgs.msg import PoseStamped, TransformStamped
+import tf2_ros
+
+from face_turners.core import utils
+from face_turners.core.dice_detector import DiceDetector
 
 import cv2 as cv
 import numpy as np
@@ -31,13 +34,15 @@ class DiceDetectorNode(Node):
 
         # Camera parameters
         self.declare_parameter('die_size', 0.03)
+        self.declare_parameter('base_frame', 'checkerboard')
         self.declare_parameter('K', [1578.55692, 0.0, 952.440456, 0.0, 1582.46225, 545.655012, 0.0, 0.0, 1.0])
         self.declare_parameter('d', [0.07206577, 0.08106335, 0.00300317, 0.00042163, -0.40383728])
         self.declare_parameter('T_c2w', [0.998855, -0.019105, 0.043869, -0.236381, 0.020615, 0.999201, -0.034238, -0.214228, -0.043180, 0.035103, 0.998450, 0.742136, 0.0, 0.0, 0.0, 1.0])
         die_size = self.get_parameter('die_size').get_parameter_value().double_value
         K = np.array(self.get_parameter('K').get_parameter_value().double_array_value).reshape((3, 3))
         d = np.array(self.get_parameter('d').get_parameter_value().double_array_value).reshape((5,))
-        T_c2w = np.array(self.get_parameter('T_c2w').get_parameter_value().double_array_value).reshape((4, 4))
+        self.T_c2w = np.array(self.get_parameter('T_c2w').get_parameter_value().double_array_value).reshape((4, 4))
+        self.base_frame_ = self.get_parameter('base_frame').get_parameter_value().string_value
 
         # Color detection parameters
         self.declare_parameter('hue_range', (20, 40)) # Yellow color range in HSV
@@ -78,7 +83,7 @@ class DiceDetectorNode(Node):
             upper_hsv=upper_hsv,
             K=K,
             d=d,
-            T_c2w=T_c2w,
+            T_c2w=self.T_c2w,
             die_size=die_size
         )
 
@@ -95,6 +100,9 @@ class DiceDetectorNode(Node):
         self.last_dice_detections_ = deque(maxlen=1)
         self.dice_detection_srv_ = self.create_service(DiceIdentification, dice_detection_srv_topic, self.dice_identification_cb)
 
+        # Create a TF broadcaster to publish the dice poses
+        self.tf_broadcaster_ = tf2_ros.TransformBroadcaster(self)
+
         self.get_logger().info("Dice Detector Node Initialized")
 
     def detec_dice(self):
@@ -107,9 +115,17 @@ class DiceDetectorNode(Node):
         dice, dice_imgs, dice_masks = self.dice_detector_.get_dice_from_blobs(img)
 
         # Publish the detected dice detections
-        for die_img, die_mask in zip(dice_imgs, dice_masks):
+        for i, (die, die_img, die_mask) in enumerate(zip(dice, dice_imgs, dice_masks)):
             self.dice_imgs_pub_.publish(self.cv_bridge_.cv2_to_imgmsg(die_img, encoding='bgr8'))
             self.dice_masks_pub_.publish(self.cv_bridge_.cv2_to_imgmsg(die_mask, encoding='mono8'))
+
+            t = TransformStamped()
+            t.header.stamp = self.get_clock().now().to_msg()
+            t.header.frame_id = self.base_frame_
+            t.child_frame_id = f'die_{i}'
+            t.transform = utils.T_to_transform(self.T_c2w @ die.T_d2c)
+
+            self.tf_broadcaster_.sendTransform(t)
 
         # Save the last detection for the service
         self.last_dice_detections_.append(dice)
@@ -119,12 +135,20 @@ class DiceDetectorNode(Node):
             response.success = False
             return response
 
-        # Get the last detection result
-        last_detection = self.last_dice_detections_[-1]
-        response.detections = last_detection
-        response.success = True
-        return response
+        die = self.last_dice_detections_[-1][-1]
 
+        pose = PoseStamped()
+        pose.header.stamp = self.get_clock().now().to_msg()
+        pose.header.frame_id = self.base_frame_
+        pose.pose = utils.T_to_pose(self.T_c2w @ die.T_d2c)
+
+        response.face_number = die.face_number
+        response.pose = pose
+        response.success = True
+
+        self.get_logger().info("Service called -> returning static dice info")
+        return response
+    
 
 def main(args=None):
     rclpy.init(args=args)

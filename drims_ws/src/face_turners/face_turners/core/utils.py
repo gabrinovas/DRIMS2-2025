@@ -1,6 +1,34 @@
 import cv2 as cv
 import numpy as np
 
+from geometry_msgs.msg import Pose, Transform
+from scipy.spatial.transform import Rotation as R
+
+
+def T_to_pose(T: np.ndarray) -> Pose:
+    pose = Pose()
+    pose.position.x = T[0, 3]
+    pose.position.y = T[1, 3]
+    pose.position.z = T[2, 3]
+    quat = R.from_matrix(T[:3, :3]).as_quat()
+    pose.orientation.x = quat[0]
+    pose.orientation.y = quat[1]
+    pose.orientation.z = quat[2]
+    pose.orientation.w = quat[3]
+    return pose
+
+def T_to_transform(T: np.ndarray) -> Transform:
+    transform = Transform()
+    transform.translation.x = T[0, 3]
+    transform.translation.y = T[1, 3]
+    transform.translation.z = T[2, 3]
+    quat = R.from_matrix(T[:3, :3]).as_quat()
+    transform.rotation.x = quat[0]
+    transform.rotation.y = quat[1]
+    transform.rotation.z = quat[2]
+    transform.rotation.w = quat[3]
+    return transform
+
 def draw_axis(img: np.ndarray, pose: np.ndarray, K: np.ndarray, length: float = 0.01) -> np.ndarray:
     axis_points = np.float32(
         [[0, 0, 0], [length, 0, 0], [0, length, 0], [0, 0, length]]

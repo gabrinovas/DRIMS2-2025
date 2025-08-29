@@ -47,6 +47,8 @@ def launch_setup(context):
             {"K": camera_cf["K"]},
             {"d": camera_cf["d"]},
             {"T_c2w": camera_cf["T_c2w"]},
+            {"die_size": detector_cf["die_size"]},
+            {"base_frame": topics_cf["base_frame"]},
             {"use_sim_time": LaunchConfiguration("fake")}
         ],
     )
