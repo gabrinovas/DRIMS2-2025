@@ -98,7 +98,12 @@ RUN python3 -m pip install "numpy<2"
 RUN echo "source /home/drims/drims_ws/install/setup.bash" >> ~/.bashrc
 RUN apt-get update && apt-get install -y ros-humble-rqt ros-humble-rqt-tf-tree
 
-
+USER $USER_NAME
+WORKDIR /home/$USER_NAME/static/drims2_ws/src
+RUN git clone https://github.com/MerlinLaboratory/udp_to_ros2_bridge.git
+WORKDIR /home/$USER_NAME/static/drims2_ws
+SHELL ["/bin/bash", "-c"]
+RUN source /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release 
 
 
 WORKDIR /home/$USER_NAME
