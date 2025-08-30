@@ -7,6 +7,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from drims2_msgs.srv import DiceIdentification
 from geometry_msgs.msg import PoseStamped, TransformStamped
+from rclpy.executors import SingleThreadedExecutor
 import tf2_ros
 
 from face_turners.core import utils
@@ -122,8 +123,14 @@ class DiceDetectorNode(Node):
             t = TransformStamped()
             t.header.stamp = self.get_clock().now().to_msg()
             t.header.frame_id = self.base_frame_
-            t.child_frame_id = f'die_{i}'
+            t.child_frame_id = f'die_frame'
             t.transform = utils.T_to_transform(self.T_c2w @ die.T_d2c)
+
+            # Invert x and y axis transform
+            x = t.transform.translation.x
+            y = t.transform.translation.y 
+            t.transform.translation.x = y
+            t.transform.translation.y = -x
 
             self.tf_broadcaster_.sendTransform(t)
 
@@ -131,6 +138,7 @@ class DiceDetectorNode(Node):
         self.last_dice_detections_.append(dice)
 
     def dice_identification_cb(self, request, response):
+        self.get_logger().info("Dice identification service called")
         if not self.last_dice_detections_:
             response.success = False
             return response
@@ -142,6 +150,12 @@ class DiceDetectorNode(Node):
         pose.header.frame_id = self.base_frame_
         pose.pose = utils.T_to_pose(self.T_c2w @ die.T_d2c)
 
+        # Invert x and y axis
+        x = pose.pose.position.x
+        y = pose.pose.position.y
+        pose.pose.position.x = y
+        pose.pose.position.y = -x
+
         response.face_number = die.face_number
         response.pose = pose
         response.success = True
@@ -152,13 +166,16 @@ class DiceDetectorNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
+    
     node = DiceDetectorNode()
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+
     try:
-        rclpy.spin(node)
+        executor.spin()
     except KeyboardInterrupt:
         pass
     node.destroy_node()
     rclpy.shutdown()
-
 if __name__ == '__main__':
     main()
