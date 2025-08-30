@@ -45,8 +45,6 @@ class DicePickerNode(Node):
             DiceIdentification, dice_identification_srv_topic, callback_group=ReentrantCallbackGroup()
         )
     
-        # self.detection_client_ = self.create_client(DiceIdentification, dice_identification_srv_topic)
-
         self.find_face_srv = self.create_service(FaceDetection, dice_face_picker_srv_topic, self.find_die_face_cb)
 
         self.tf_buffer = Buffer()
