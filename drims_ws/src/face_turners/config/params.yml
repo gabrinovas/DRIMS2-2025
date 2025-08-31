@@ -16,7 +16,8 @@ detector:
 
   # Parameters for the blobs/dice points detector
   min_point_area: 50
-  max_point_area: 400
+  max_point_area: 600
+  # max_point_area: 400
   min_inertia_ratio: 0.7
   min_circularity: 0.85
   dbscan_eps: 80.0

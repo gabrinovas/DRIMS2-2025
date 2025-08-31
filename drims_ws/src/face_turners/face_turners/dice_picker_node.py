@@ -50,13 +50,24 @@ class DicePickerNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+
+
+        # self.home_joints_ = [
+        #     1.5418810844421387,
+        #     -1.2947982114604493,
+        #     2.21130878130068,
+        #     -2.4932671986021937,
+        #     -1.569287125264303,
+        #     0.020456844940781593
+        # ]
+
         self.home_joints_ = [
-            1.5418810844421387,
-            -1.2947982114604493,
-            2.21130878130068,
-            -2.4932671986021937,
-            -1.569287125264303,
-            0.020456844940781593
+            1.5409495808316822,
+            -1.3843628072607812,
+            2.177821512228103,
+            -2.3695513524553977,
+            -1.5697746533959358,
+            0.020555823269430118
         ]
 
         self.display_joints_ = [
@@ -77,18 +88,44 @@ class DicePickerNode(Node):
             0.039808164915431314
         ]
         
+        # self.flip_die_joints_ = [
+        #     1.5359710293591688,
+        #     -1.0346227024536812,
+        #     1.7331824834092626,
+        #     -2.1741344186648637,
+        #     -1.5691815293356701,
+        #     0.014715908622527595,
+        # ]
+
+        # self.flip_die_joints_ = [
+        #     1.5227756008577444,
+        #     -0.9311017882766494,
+        #     1.5147719510830737,
+        #     -1.6832424054592459,
+        #     -1.5695829841285376,
+        #     0.0009660463981320226
+        # ]
         self.flip_die_joints_ = [
-            1.5359710293591688,
-            -1.0346227024536812,
-            1.7331824834092626,
-            -2.1741344186648637,
-            -1.5691815293356701,
-            0.014715908622527595,
+            1.5219511102741374,
+            -0.8222576415219687,
+            1.2060181323003007,
+            -1.133661829726807,
+            -1.5703189202459062,
+            6.442797384262862e-05
         ]
+
+
+
+        self.close_position_ = 0.025
+        self.dice_grasp_z_ = 0.01
+
+        # self.motion_client_.move_to_joint(self.home_joints_)
+        # self.motion_client_.move_to_joint(self.flip_die_joints_)
         
         self.get_logger().info("Die Picker Node Initialized")
 
     def find_die_face_cb(self, request, response):
+
         # Move to detection configuration
         self.get_logger().info("Moving to detection configuration...")
         self.motion_client_.move_to_joint(self.die_detection_joints_)
@@ -101,37 +138,32 @@ class DicePickerNode(Node):
             response.success = False
             return response
 
-        # Loop and hope for the best
-        while  face_number != request.target_face:
-            # Pick the dies and display a new face to the camera
+        # Loop and pray for the best
+        while face_number != request.target_face:
+            # Pick the die and display a new face to the camera
             self.pick_die(die_pose)
 
-            time.sleep(1.0)
-            res, face_number, die_pose = self.detect_die()
+            # time.sleep(2.0)
+            # res, face_number, _ = self.detect_die()
 
-            if not res:
-                self.get_logger().error("Failed to detect die.")
-                response.success = False
-                return response
-
-            if face_number == request.target_face:
-                self.place_die(die_pose)
-                time.sleep(5.0)
-                self.get_logger().info("Target face reached, placing die down.")
-                response.success = True
-                return response
+            # if res and face_number == request.target_face:
+            #     self.get_logger().info("Target face reached, placing die down.")
+            #     time.sleep(5.0)
+            #     self.place_die(die_pose)
+            #     response.success = True
+            #     return response
             
-            if (7 - face_number) == request.target_face:
-                self.rotate_gripper(degrees=180)
-                self.get_logger().info("Target face reached, placing die down.")
-                time.sleep(5.0)
-                self.place_die(die_pose)
-                response.success = True
-                return response
-            
+            # if res and (7 - face_number) == request.target_face:
+            #     self.rotate_gripper(degrees=180)
+            #     self.get_logger().info("Target face reached, placing die down.")
+            #     time.sleep(5.0)
+            #     self.place_die(die_pose)
+            #     response.success = True
+            #     return response
+        
             self.flip_die()
 
-            time.sleep(1.0)
+            time.sleep(2.0)
             res, face_number, die_pose = self.detect_die()
 
             if not res:
@@ -173,12 +205,12 @@ class DicePickerNode(Node):
         # Move to grasp pose
         self.get_logger().info("Moving to grasp pose...")
         grasp_pose = deepcopy(die_pose)
-        grasp_pose.pose.position.z = -0.02
+        grasp_pose.pose.position.z = self.dice_grasp_z_
         self.motion_client_.move_to_pose(grasp_pose, cartesian_motion=True)
 
         # Close the gripper
         self.get_logger().info("Closing gripper...")
-        reached_goal, stalled = self.motion_client_.gripper_command(position=0.0)  # 0.0 = closed
+        reached_goal, stalled = self.motion_client_.gripper_command(position=self.close_position_)  # 0.0 = closed
         self.get_logger().info(f"Gripper closed (reached_goal={reached_goal}, stalled={stalled})")
 
         # Lift the die
@@ -189,9 +221,9 @@ class DicePickerNode(Node):
         self.get_logger().info("Moving home...")
         self.motion_client_.move_to_joint(self.home_joints_)
         
-        # Move to display configuration
-        self.get_logger().info("Moving to display configuration...")
-        self.motion_client_.move_to_joint(self.display_joints_)
+        # # Move to display configuration
+        # self.get_logger().info("Moving to display configuration...")
+        # self.motion_client_.move_to_joint(self.display_joints_)
 
     def rotate_gripper(self, degrees: float = 180):
         # Pose to rotate gripper tip frame w.r.t the Z axis
@@ -215,7 +247,7 @@ class DicePickerNode(Node):
         # Move to grasp pose
         self.get_logger().info("Move to release pose...")
         release_pose = deepcopy(place_pose)
-        release_pose.pose.position.z = -0.02
+        release_pose.pose.position.z = self.dice_grasp_z_ + 0.02
         self.motion_client_.move_to_pose(release_pose, cartesian_motion=True)
 
         # Open the gripper
