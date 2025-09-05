@@ -1,16 +1,4 @@
 repositories:
-  abb_libs/abb_egm_rws_managers:
-    type: git
-    url: https://github.com/gabrinovas/abb_egm_rws_managers.git
-    version: master
-  abb_libs/abb_libegm:
-    type: git
-    url: https://github.com/gabrinovas/abb_libegm.git
-    version: master
-  abb_libs/abb_ros2_msgs:
-    type: git
-    url: https://github.com/gabrinovas/abb_ros2_msgs.git
-    version: rolling
   ros2_robotiq_gripper:
     type: git
     url: https://github.com/gabrinovas/ros2_robotiq_gripper.git
