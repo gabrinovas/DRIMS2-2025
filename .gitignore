@@ -7,3 +7,11 @@ docker/abb_omnicore_ros2
 drims_ws/src/solutions/
 bags/
 mi_drims2_local_backup.tar
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+*.swp
+.DS_Store
+*.egg-info/
+
