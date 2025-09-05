@@ -23,8 +23,8 @@ detector:
 
 robot:
   robot_id: 1 # redhand
-  robot_name: "ur10e"
-  robot_ip: "192.168.254.100"
+  robot_name: "ur5e"
+  robot_ip: "169.254.128.102"
 
 camera:
   1: # ROBOT 1, redhand

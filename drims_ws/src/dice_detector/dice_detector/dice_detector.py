@@ -16,20 +16,43 @@ class DiceDetector(Node):
         # Bridge OpenCV <-> ROS
         self.bridge = CvBridge()
 
-        # Subscriber
+        self.declare_parameter("use_fake_camera", False)
+        use_fake = self.get_parameter("use_fake_camera").get_parameter_value().bool_value
+
+        # Subscriber (listens to "camera")
         self.subscription = self.create_subscription(
             Image,
             '/color/video/image',
             self.listener_callback,
             10)
 
-        # Publisher
+        # Publisher (processed output)
         self.publisher = self.create_publisher(Image, '/dice_detector/circle', 10)
 
         # Service
         self.srv = self.create_service(DiceIdentification, 'dice_identification', self.handle_service)
 
         self.get_logger().info("Dice Detector node started")
+
+        if use_fake:
+            # Fake camera publisher
+            self.fake_camera_pub = self.create_publisher(Image, '/color/video/image', 10)
+            self.timer = self.create_timer(0.1, self.publish_static_image)  # 10 Hz
+
+            # Load static image
+            self.frame = cv2.imread("./bags/_Color_1755779681772.65356445312500.png")
+            if self.frame is None:
+                self.get_logger().error("Could not load static image!")
+            else:
+                self.get_logger().info("Static image loaded, simulating camera...")
+
+
+    def publish_static_image(self):
+        if self.frame is not None:
+            # Convert OpenCV -> ROS Image
+            img_msg = self.bridge.cv2_to_imgmsg(self.frame, encoding='bgr8')
+            self.fake_camera_pub.publish(img_msg)
+
 
     def listener_callback(self, msg):
         # Convert ROS image -> OpenCV
