@@ -143,8 +143,13 @@ class DiceDetectorNode(Node):
             response.success = False
             return response
 
-        die = self.last_dice_detections_[-1][-1]
-
+        dice = self.last_dice_detections_[-1] 
+        if not dice:
+            response.success = False
+            return response
+        
+        die = dice[-1]
+    
         pose = PoseStamped()
         pose.header.stamp = self.get_clock().now().to_msg()
         pose.header.frame_id = self.base_frame_
