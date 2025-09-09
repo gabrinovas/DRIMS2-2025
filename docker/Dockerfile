@@ -53,10 +53,19 @@ RUN ./Groot2-v1.6.1-linux-installer.run install --root /opt/groot --accept-licen
 RUN ln -s /opt/groot/bin/groot2 /usr/local/bin/groot
 
 # Clone code as root
-RUN git clone https://github.com/gabrinovas/drims2_motion_control.git
+RUN git clone https://github.com/gabrinovas/drims2_motion_control.git || \
+    (cd /app/repo && git pull && cd ../..)
 RUN vcs import < drims2_motion_control/dependencies.repos
-RUN git clone https://github.com/gabrinovas/drims2_dice_simulator.git
-RUN git clone https://github.com/gabrinovas/drims2_cells.git
+RUN git clone https://github.com/gabrinovas/drims2_dice_simulator.git || \
+    (cd /app/repo && git pull && cd ../..)
+
+RUN rm -rf drims2_cells && \
+    git clone https://github.com/gabrinovas/drims2_cells_try1.git || \
+    (cd /app/repo && git pull && cd ../..) && \
+    mv drims2_cells_try1 drims2_cells
+# RUN git clone https://github.com/gabrinovas/drims2_cells_try1.git || \
+#     (cd /app/repo && git pull)
+
 RUN yq 'del(.repositories."abb_libs/abb_librws_2.0", .repositories."abb_libs/abb_omnicore_ros2", .repositories."abb_libs/abb_egm_rws_managers", .repositories."abb_libs/abb_libegm", .repositories."abb_libs/abb_ros2_msgs")' \
     drims2_cells/deps.repos > drims2_cells/deps.filtered.repos
 RUN vcs import < drims2_cells/deps.filtered.repos
@@ -97,7 +106,8 @@ RUN apt-get update && apt-get install -y ros-humble-rqt ros-humble-rqt-tf-tree
 
 USER $USER_NAME
 WORKDIR /home/$USER_NAME/static/drims2_ws/src
-RUN git clone https://github.com/gabrinovas/udp_to_ros2_bridge.git
+RUN git clone https://github.com/gabrinovas/udp_to_ros2_bridge.git || \
+    (cd /app/repo && git pull && cd ../..)
 WORKDIR /home/$USER_NAME/static/drims2_ws
 SHELL ["/bin/bash", "-c"]
 RUN source /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release 

@@ -2,11 +2,11 @@ repositories:
   onrobot_ros:
     type: git
     url: https://github.com/gabrinovas/onrobot_ros.git
-    version: humble
+    version: master
   onrobot_2FG7_gripper_description:
     type: git
     url: https://github.com/gabrinovas/onrobot_2FG7_gripper_description.git
-    version: humble
+    version: master
   serial:
     type: git
     url: https://github.com/gabrinovas/serial.git

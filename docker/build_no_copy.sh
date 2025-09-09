@@ -4,6 +4,7 @@
 #docker buildx build --no-cache --platform linux/amd64,linux/arm64 --network=host --ssh default -t smentasti/drims2:2025 --push . 
 
 # docker build  --network=host -t gabrinovas/drims2:2025 --push . 
-docker build  --network=host -t drims2_local:2025 --push . 
+# docker build  --network=host -t drims2:2025 --push . 
+docker build  --network=host -t drims2:local --push . 
 
 #docker build  --network=host -t smentasti/drims2:2025 .
