@@ -4,22 +4,22 @@
 
 # ========= CONFIG: set fixed peers per robot here =========
 # Space-separated list of peer IPs per robot.
-UR_2F_PEERS="192.168.254.100"          # UR robots on 192.168.254.x
+UR_2F_PEERS="169.254.128.102"          # UR robots on 169.254.128.x
 TIAGO_PEERS="10.68.0.1"               # Tiago robots on 10.68.0.x (EDIT as needed)
 # ==========================================================
 
-UR_PFX="192.168.254."
+UR_PFX="169.254.128."
 TIAGO_PFX="10.68.0."
 
 out_file="${HOME}/cyclone_config.xml"
 
-# Find interface that has an IPv4 on a given prefix (e.g., "192.168.254.")
+# Find interface that has an IPv4 on a given prefix (e.g., "169.254.128.")
 find_iface_for_prefix() {
   pfx="$1"
-  # Sample line: "2: enp4s0    inet 192.168.254.42/24 brd ..."
+  # Sample line: "2: enp4s0    inet 169.254.128.42/24 brd ..."
   ip -o -4 addr show 2>/dev/null | awk -v pfx="$pfx" '
     $3 == "inet" {
-      # $4 is like "192.168.254.42/24"
+      # $4 is like "169.254.128.42/24"
       split($4, a, "/");
       if (index(a[1], pfx) == 1) { print $2; exit }
     }

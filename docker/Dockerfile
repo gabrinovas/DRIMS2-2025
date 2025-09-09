@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Set timezone (avoid tzdata prompt)
 RUN echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections \
- && echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections
+    && echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections
 
 # Base tools
 RUN apt-get update && apt-get install -y \
@@ -18,16 +18,15 @@ RUN apt-get update && apt-get install -y \
     ros-humble-behaviortree-cpp* ros-humble-ros-testing freeglut3-dev ros-humble-moveit-resources-* \
     ros-humble-realsense2-camera \
     ros-humble-ur-* \
-    ros-humble-omni-base* ros-humble-play-motion2 ros-humble-diagnostic-aggregator ros-humble-gazebo*\
+    ros-humble-omni-base* ros-humble-play-motion2 ros-humble-diagnostic-aggregator ros-humble-gazebo* \
     libprotobuf-dev protobuf-compiler ros-humble-tf* \
     ros-humble-rmw-cyclonedds-cpp \
     net-tools iproute2
 
-RUN apt-get install -y python3-pip python3-colcon-common-extensions python3-pybind11 cmake libmodbus-dev libmongoclient-dev wget\
+RUN apt-get install -y python3-pip python3-colcon-common-extensions python3-pybind11 cmake libmodbus-dev libmongoclient-dev wget \
     && wget https://github.com/gabrinovas/tools-binaries/raw/main/yq_linux_amd64 -O /usr/bin/yq \
     # && wget https://github.com/mikefarah/yq/releases/download/v4.35.1/yq_linux_amd64 -O /usr/bin/yq \
     && chmod +x /usr/bin/yq
-
 
 # Python dependencies
 RUN pip3 install --upgrade scipy depthai trimesh transforms3d ur_rtde
@@ -62,13 +61,6 @@ RUN yq 'del(.repositories."abb_libs/abb_librws_2.0", .repositories."abb_libs/abb
     drims2_cells/deps.repos > drims2_cells/deps.filtered.repos
 RUN vcs import < drims2_cells/deps.filtered.repos
 
-
-
-# COPY abb_librws_2.0 ./abb_librws_2.0
-# COPY abb_omnicore_ros2 ./abb_omnicore_ros2
-
-
-# RUN bash ./abb_librws_2.0/setup_poco_ppa.sh
 
 # Fix ownership of everything
 RUN chown -R $USER_NAME:$GROUP_NAME /home/$USER_NAME
@@ -113,6 +105,5 @@ RUN source /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD
 
 WORKDIR /home/$USER_NAME
 
-#Letsgo
+# Lets go
 CMD ["bash"]
-

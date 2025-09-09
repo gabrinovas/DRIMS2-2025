@@ -1,7 +1,11 @@
 repositories:
-  ros2_robotiq_gripper:
+  onrobot_ros:
     type: git
-    url: https://github.com/gabrinovas/ros2_robotiq_gripper.git
+    url: https://github.com/gabrinovas/onrobot_ros.git
+    version: humble
+  onrobot_2FG7_gripper_description:
+    type: git
+    url: https://github.com/gabrinovas/onrobot_2FG7_gripper_description.git
     version: humble
   serial:
     type: git
