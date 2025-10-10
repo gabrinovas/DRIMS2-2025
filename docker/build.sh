@@ -1,8 +1,23 @@
-# #!/bin/bash
-# git clone -b marco-sg-control git@github.com:MerlinLaboratory/abb_librws_2.0.git
-# git clone -b cari git@github.com:MerlinLaboratory/abb_omnicore_ros2.git
-#docker buildx build --no-cache --platform linux/amd64,linux/arm64 --network=host --ssh default -t smentasti/drims2:2025 --push . 
+#!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
 
-# docker build  --network=host --ssh default -t gabrinovas/drims2:2025 --push . 
-docker build  --network=host --ssh default -t drims2_local:2025 --push . 
+# Clean up all unused Docker data, images, containers, and networks
+echo "🧹 Cleaning everything..."
+docker system prune -a -f
 
+# Build the Docker image without using cache, tagging it as 'my_drims2:local'
+echo "🚀 Building with no cache..."
+docker build \
+    --no-cache \
+    -t gabrinovas/drims2:v1.0.0 \
+    .
+
+# # Alternative: Build using cache (commented out)
+# echo "🚀 Building..."
+# docker build \
+#     -t my_drims2:local \
+#     .
+
+docker push gabrinovas/drims2:v1.0.0
+
+echo "✅ Build successful!"
