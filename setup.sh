@@ -1,33 +1,32 @@
 #!/bin/bash
 
-# Define variables
+# Define variables for udev rules and group
 RULES_FILE="80-movidius.rules"
 DEST_DIR="/etc/udev/rules.d"
 GROUP_NAME="drims2"
 GROUP_ID=42042
 
-# Check if the rules file exists
+# Check if the Movidius udev rules file exists
 if [ ! -f "$RULES_FILE" ]; then
     echo "Error: $RULES_FILE not found!"
     exit 1
 fi
 
-# Copy the rules file to /etc/udev/rules.d
+# Copy the Movidius udev rules file to /etc/udev/rules.d
 echo "Copying $RULES_FILE to $DEST_DIR..."
 sudo cp "$RULES_FILE" "$DEST_DIR"
 
 ROBOTIQ_RULES_FILE="99-robotiq.rules"
 
-# Check if the rules file exists
+# Check if the Robotiq udev rules file exists
 if [ ! -f "$ROBOTIQ_RULES_FILE" ]; then
     echo "Error: $RULES_FILE not found!"
     exit 1
 fi
 
-# Copy the rules file to /etc/udev/rules.d
+# Copy the Robotiq udev rules file to /etc/udev/rules.d
 echo "Copying $ROBOTIQ_RULES_FILE to $DEST_DIR..."
 sudo cp "$ROBOTIQ_RULES_FILE" "$DEST_DIR"
-
 
 # Create the group drims2 with GID 42042 if it doesn't exist
 if ! getent group $GROUP_NAME >/dev/null; then
@@ -37,7 +36,7 @@ else
     echo "Group $GROUP_NAME already exists."
 fi
 
-# Add the current user to the drims group if not already a member
+# Add the current user to the drims2 group if not already a member
 if ! id -nG "$USER" | grep -qw $GROUP_NAME; then
     echo "Adding user $USER to group $GROUP_NAME..."
     sudo usermod -aG $GROUP_NAME $USER
@@ -50,6 +49,7 @@ fi
 echo "Changing group ownership of directories drims_ws and bags to $GROUP_NAME..."
 sudo chgrp -R $GROUP_NAME "$PWD/drims_ws" "$PWD/bags"
 
+# Set full permissions for drims_ws and bags directories
 sudo chmod 777 "$PWD/drims_ws" "$PWD/bags"
 
 echo "Script execution completed."

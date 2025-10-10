@@ -1,3 +1,6 @@
-# Robotiq gripper via FTDI 0403:6015 -> /dev/robotiq
+# Udev rule for Robotiq gripper using FTDI USB-to-serial converter (vendor 0403, product 6015)
+# - Sets device permissions to 0666 (read/write for all users)
+# - Creates a symlink /dev/robotiq for easy access
+# - Adds uaccess tag for user-space device access
 SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6015", \
   MODE="0666", SYMLINK+="robotiq", TAG+="uaccess"

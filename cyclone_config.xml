@@ -1,30 +1,43 @@
 <CycloneDDS>
   <Domain>
     <General>
+      <!-- Disable multicast for DDS communication -->
       <AllowMulticast>false</AllowMulticast>
+      <!-- Set the maximum message size to 1400 bytes -->
       <MaxMessageSize>1400B</MaxMessageSize>
       <Interfaces>
-      	<!-- Note: The name="" must be set in according to ifconfig -->
-        <!-- <NetworkInterface name="enp4s0" priority="1"/> -->
+        <!--
+          Configure network interfaces for DDS.
+          Uncomment and set the correct interface name as needed (see ifconfig).
+          Example for a physical interface:
+          <NetworkInterface name="enp4s0" priority="1"/>
+        -->
+        <!-- Use loopback interface with lowest priority -->
         <NetworkInterface name="lo" priority="0"/>
       </Interfaces>
     </General>
     <Discovery>
+      <!-- Let CycloneDDS automatically assign a participant index -->
       <ParticipantIndex>auto</ParticipantIndex>
       <Peers>
+        <!-- List of peer addresses for DDS discovery -->
         <Peer Address="localhost"/>
         <Peer Address="192.168.254.100"/> <!-- UR10 E 2F-->
         <!-- <Peer Address=""/> --> <!-- Tiago pro-->
       </Peers>
+      <!-- Maximum allowed participant index for auto assignment -->
       <MaxAutoParticipantIndex>500</MaxAutoParticipantIndex>
     </Discovery>
     <Internal>
       <Watermarks>
+        <!-- Set the high watermark for the write cache to 2000 kB -->
         <WhcHigh>2000kB</WhcHigh>
       </Watermarks>
     </Internal>
     <Tracing>
+      <!-- Set verbosity level for tracing output -->
       <Verbosity>config</Verbosity>
+      <!-- Output trace logs to this file -->
       <OutputFile>${HOME}/.ros/log/cdds.log</OutputFile>
     </Tracing>
   </Domain>
