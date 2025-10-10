@@ -57,6 +57,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-camera-calibration-parsers \
     ros-humble-vision-msgs \
     ros-humble-image-pipeline \
+    ros-humble-rqt-image-view \
     libaravis-dev \
     libnotify-dev \
     gstreamer1.0-plugins-base \
@@ -66,7 +67,8 @@ RUN apt-get update && apt-get install -y \
     gstreamer1.0-tools \
     python3-pymodbus \
     netcat-openbsd \
-    iputils-ping
+    iputils-ping \
+    usbutils
 
 # Install additional Python and C++ dependencies, and yq binary for YAML processing
 RUN apt-get install -y python3-colcon-common-extensions python3-pybind11 cmake libmodbus-dev libmongoclient-dev wget\
@@ -182,8 +184,8 @@ RUN chmod +x /home/$USER_NAME/check_script.sh
 RUN chmod +x /home/$USER_NAME/setup_robot_connection.sh
 RUN chmod +x /home/$USER_NAME/setup_onrobot_network.sh
 RUN chmod +x /home/$USER_NAME/test_gripper_integration.sh
-RUN chmod +x /home/$USER_NAME/cameras_launchers/hik_camera_aravis.yaml
-RUN chmod +x /home/$USER_NAME/cameras_launchers/hik_config.yaml
+RUN chmod 644 /home/$USER_NAME/cameras_launchers/hik_camera_aravis.yaml
+RUN chmod 644 /home/$USER_NAME/cameras_launchers/hik_config.yaml
 RUN chmod +x /home/$USER_NAME/cameras_launchers/multi_camera_launch.py
 RUN chmod +x /home/$USER_NAME/cameras_launchers/multi_d435i_launch.py
 
