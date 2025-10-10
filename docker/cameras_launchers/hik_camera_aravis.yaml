@@ -1,0 +1,35 @@
+/**:
+  ros__parameters:
+    # Name of the camera node in ROS
+    camera_name: "hik_camera"
+    # Device identifier: can be "HIK", a serial number, or other supported string
+    device: "HIK"  # or specific camera serial number
+    # Alternatively, you can use:
+    # guid: "specific-camera-guid" 
+    # or
+    # ip: "192.168.1.100"
+    
+    # Image settings
+    width: 1920           # Image width in pixels
+    height: 1080          # Image height in pixels
+    pixel_format: "BGR8"  # Pixel format for output images
+    frame_rate: 30.0      # Frames per second
+    
+    # Camera control parameters
+    exposure_auto: "Off"      # Exposure mode: "Off", "Once", or "Continuous"
+    exposure_time: 50000.0    # Exposure time in microseconds
+    
+    gain_auto: "Off"          # Gain mode: "Off", "Once", or "Continuous"
+    gain: 16.0                # Gain value
+    
+    # ROI settings (optional)
+    # offset_x: 0             # Region of interest X offset
+    # offset_y: 0             # Region of interest Y offset
+    
+    # Streaming parameters
+    stream_priority: 0        # Stream priority: 0=lowest, 1=normal, 2=urgent, 3=high
+    packet_delay: 4000        # Packet delay in nanoseconds
+    
+    # ROS parameters
+    camera_info_url: ""       # Path to camera calibration file if available
+    image_id: 0               # Image ID for multi-camera setups
