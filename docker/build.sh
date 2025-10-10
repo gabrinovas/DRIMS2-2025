@@ -8,16 +8,18 @@ docker system prune -a -f
 # Build the Docker image without using cache, tagging it as 'my_drims2:local'
 echo "🚀 Building with no cache..."
 docker build \
+    --network=host \
     --no-cache \
-    -t gabrinovas/drims2:v1.0.0 \
+    -t gabrinovas/drims2:v1 \
     .
 
 # # Alternative: Build using cache (commented out)
 # echo "🚀 Building..."
 # docker build \
+#     --network=host \
 #     -t my_drims2:local \
 #     .
 
-docker push gabrinovas/drims2:v1.0.0
+docker push gabrinovas/drims2:v1
 
 echo "✅ Build successful!"

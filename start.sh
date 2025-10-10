@@ -2,7 +2,7 @@
 
 # Specify the container name and image to use
 CONTAINER_NAME="drims2"
-IMAGE_NAME="gabrinovas/drims2:v1.0.0"
+IMAGE_NAME="gabrinovas/drims2:v1"
 # IMAGE_NAME="my_drims2:local"
 
 # Pull the latest image (commented out for local builds)
