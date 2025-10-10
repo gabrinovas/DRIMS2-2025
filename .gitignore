@@ -4,9 +4,9 @@ drims_ws/install/
 drims_ws/log/
 docker/abb_librws_2.0
 docker/abb_omnicore_ros2
+docker/Groot2-v1.6.1-linux-installer.run
 drims_ws/src/solutions/
 bags/
-mi_drims2_local_backup.tar
 .vscode/
 .idea/
 *.pyc
