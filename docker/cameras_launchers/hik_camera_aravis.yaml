@@ -2,16 +2,16 @@
   ros__parameters:
     # Name of the camera node in ROS
     camera_name: "hik_camera"
-    # Device identifier: can be "HIK", a serial number, or other supported string
-    device: "HIK"  # or specific camera serial number
-    # Alternatively, you can use:
-    # guid: "specific-camera-guid" 
-    # or
-    # ip: "192.168.1.100"
+    
+    # Device identifier - use the IP address from camera_finder
+    device: "172.168.100.10"
+    # Alternative identifiers (commented out):
+    # guid: "Hikrobot-MV-CS200-10GC-DA2972407"
+    # serial: "DA2972407"
     
     # Image settings
     width: 1920           # Image width in pixels
-    height: 1080          # Image height in pixels
+    height: 1080          # Image height in pixels  
     pixel_format: "BGR8"  # Pixel format for output images
     frame_rate: 30.0      # Frames per second
     
@@ -22,14 +22,40 @@
     gain_auto: "Off"          # Gain mode: "Off", "Once", or "Continuous"
     gain: 16.0                # Gain value
     
-    # ROI settings (optional)
+    # Additional camera parameters for Hikrobot
+    balance_white_auto: "Off"     # White balance mode
+    balance_ratio_red: 1.8        # Red balance ratio
+    balance_ratio_green: 1.0      # Green balance ratio  
+    balance_ratio_blue: 2.2       # Blue balance ratio
+    
+    # ROI settings (optional - uncomment if needed)
     # offset_x: 0             # Region of interest X offset
     # offset_y: 0             # Region of interest Y offset
+    # roi_width: 1920         # ROI width
+    # roi_height: 1080        # ROI height
     
     # Streaming parameters
-    stream_priority: 0        # Stream priority: 0=lowest, 1=normal, 2=urgent, 3=high
+    stream_priority: 1        # Stream priority: 0=lowest, 1=normal, 2=urgent, 3=high
+    packet_size: 1500         # Packet size in bytes (Ethernet MTU)
     packet_delay: 4000        # Packet delay in nanoseconds
+    
+    # GigE Vision specific parameters
+    gev_scps_packet_size: 1500    # GigE Vision packet size
+    gev_scpd: 4000                # GigE Vision packet delay
+    
+    # Buffer and performance settings
+    num_buffer: 10            # Number of buffers for image acquisition
+    timeout: 5000             # Timeout for image acquisition in milliseconds
     
     # ROS parameters
     camera_info_url: ""       # Path to camera calibration file if available
     image_id: 0               # Image ID for multi-camera setups
+    
+    # Frame ID for TF tree
+    frame_id: "hik_camera_optical_frame"
+    
+    # Topic remapping (optional)
+    use_sensor_data_qos: false  # Use sensor data QoS for real-time performance
+    
+    # Diagnostic settings
+    diagnostic_period: 1.0    # Diagnostic update period in seconds

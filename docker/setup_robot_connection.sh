@@ -146,6 +146,19 @@ if [ -n "$UR5e_IFACE" ]; then
         if nc -z -w 2 $ONROBOT_IP $ONROBOT_PORT 2>/dev/null; then
             echo "✅ OnRobot Compute Box Modbus port $ONROBOT_PORT accessible"
             echo "✅ Hardware mode: gripper commands will be sent to real hardware"
+            
+            # Additional check: verify we can also reach at least one UR controller
+            UR_REACHABLE=0
+            for ur_peer in $UR5e_LEFT $UR5e_RIGHT; do
+                if ping -c 1 -W 1 -I "$IFACE" -q "$ur_peer" >/dev/null 2>&1; then
+                    echo "✅ UR controller $ur_peer also reachable"
+                    UR_REACHABLE=1
+                    break
+                fi
+            done
+            if [ "$UR_REACHABLE" -eq 0 ]; then
+                echo "⚠️  UR controllers not reachable, but gripper is available"
+            fi
         else
             echo "⚠️  OnRobot Compute Box Modbus port $ONROBOT_PORT not accessible"
             echo "⚠️  Running gripper in simulation mode"

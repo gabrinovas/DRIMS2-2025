@@ -1,12 +1,12 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
 import os
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
-    # Get the path to the Hikvision camera configuration file
-    hik_config_path = os.path.join(
-        get_package_share_directory('camera_aravis2'),
+    # Get path to your config file
+    config_file = os.path.join(
+        get_package_share_directory('your_package_name'),  # Replace with your actual package name
         'config',
         'hik_config.yaml'
     )
@@ -34,6 +34,6 @@ def generate_launch_description():
             executable='camera_aravis2_node',
             name='hik_camera',
             namespace='hik_camera',
-            parameters=[hik_config_path],
+            parameters=[config_file],  # Load from YAML config
         ),
     ])

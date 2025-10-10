@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-moveit-simple-controller-manager \
     ros-humble-moveit-ros-move-group \
     ros-humble-moveit-ros-occupancy-map-monitor \
+    ros-humble-moveit-ros-perception \
     # Minimal additions for OnRobot gripper support and networking
     libmodbus-dev \
     netcat-openbsd \
@@ -50,7 +51,7 @@ RUN apt-get update && apt-get install -y \
     python3-pymodbus \
     netcat-openbsd \
     iputils-ping \
-    # Camera and image pipeline dependencies
+    # HIKRobot camera dependencies
     ros-humble-camera-aravis2 \
     ros-humble-image-transport \
     ros-humble-camera-calibration-parsers \
@@ -62,9 +63,12 @@ RUN apt-get update && apt-get install -y \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
-    ros-humble-moveit-ros-perception
+    gstreamer1.0-tools \
+    python3-pymodbus \
+    netcat-openbsd \
+    iputils-ping
 
-# Install additional Python/C++ dependencies and yq for YAML processing
+# Install additional Python and C++ dependencies, and yq binary for YAML processing
 RUN apt-get install -y python3-colcon-common-extensions python3-pybind11 cmake libmodbus-dev libmongoclient-dev wget\
     && wget https://github.com/gabrinovas/tools-binaries/raw/main/yq_linux_amd64 -O /usr/bin/yq \
     # Alternative yq download (commented out)
@@ -81,7 +85,9 @@ RUN pip3 install --no-cache-dir \
     pyyaml \
     lark \
     pymodbus \ 
-    pyserial
+    pyserial \
+    opencv-python \
+    Pillow
 
 # Create user and group for workspace ownership
 ARG GROUP_NAME=drims2
@@ -161,7 +167,6 @@ COPY setup_robot_connection.sh /home/$USER_NAME/setup_robot_connection.sh
 RUN mkdir -p /home/$USER_NAME/cameras_launchers
 COPY ./cameras_launchers/hik_camera_aravis.yaml /home/$USER_NAME/cameras_launchers/hik_camera_aravis.yaml
 COPY ./cameras_launchers/hik_config.yaml /home/$USER_NAME/cameras_launchers/hik_config.yaml
-COPY ./cameras_launchers/image_publisher.py /home/$USER_NAME/cameras_launchers/image_publisher.py
 COPY ./cameras_launchers/multi_camera_launch.py /home/$USER_NAME/cameras_launchers/multi_camera_launch.py
 COPY ./cameras_launchers/multi_d435i_launch.py /home/$USER_NAME/cameras_launchers/multi_d435i_launch.py
 
@@ -179,7 +184,6 @@ RUN chmod +x /home/$USER_NAME/setup_onrobot_network.sh
 RUN chmod +x /home/$USER_NAME/test_gripper_integration.sh
 RUN chmod +x /home/$USER_NAME/cameras_launchers/hik_camera_aravis.yaml
 RUN chmod +x /home/$USER_NAME/cameras_launchers/hik_config.yaml
-RUN chmod +x /home/$USER_NAME/cameras_launchers/image_publisher.py
 RUN chmod +x /home/$USER_NAME/cameras_launchers/multi_camera_launch.py
 RUN chmod +x /home/$USER_NAME/cameras_launchers/multi_d435i_launch.py
 
@@ -188,20 +192,14 @@ RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/setup_onrobot_network.sh
 RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/test_gripper_integration.sh
 RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/cameras_launchers/hik_camera_aravis.yaml
 RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/cameras_launchers/hik_config.yaml
-RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/cameras_launchers/image_publisher.py
 RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/cameras_launchers/multi_camera_launch.py
 RUN chown $USER_NAME:$GROUP_NAME /home/$USER_NAME/cameras_launchers/multi_d435i_launch.py
-
-USER $USER_NAME
 
 # --- Additional Python and ROS tools ---
 
 # Ensure numpy version compatibility and add workspace setup to bashrc
 RUN python3 -m pip install "numpy<2"
 RUN echo "source /home/drims/drims_ws/install/setup.bash" >> ~/.bashrc
-
-# Switch to root for apt operations, then back to user
-USER root
 
 # Install rqt tools for ROS2 visualization
 RUN apt-get update && apt-get install -y ros-humble-rqt ros-humble-rqt-tf-tree

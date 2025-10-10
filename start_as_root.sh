@@ -2,7 +2,7 @@
 
 # Specify the container name and image to use
 CONTAINER_NAME="drims2"
-IMAGE_NAME="smentasti/drims2:2025"
+IMAGE_NAME="gabrinovas/drims2:v1.0.0"
 
 # Pull the latest image from the registry
 echo "Pulling the latest image: $IMAGE_NAME..."
