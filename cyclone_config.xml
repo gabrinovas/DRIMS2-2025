@@ -23,6 +23,8 @@
         <!-- List of peer addresses for DDS discovery -->
         <Peer Address="localhost"/>
         <Peer Address="192.168.254.100"/> <!-- UR10 E 2F-->
+        <Peer Address="192.168.1.101"/>   <!-- UR5e CORRECT - OnRobot Gripper -->
+        <Peer Address="192.168.1.105"/>   <!-- UR5e CORRECT - OnRobot Gripper -->
         <!-- <Peer Address=""/> --> <!-- Tiago pro-->
       </Peers>
       <!-- Maximum allowed participant index for auto assignment -->
