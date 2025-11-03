@@ -2,13 +2,14 @@
 
 # Specify the container name and image to use
 CONTAINER_NAME="drims2"
-IMAGE_NAME="gabrinovas/drims2:v1"
+# IMAGE_NAME="gabrinovas/drims2:v1"
+IMAGE_NAME="gabrinovas/drims2:driver_trial"
 # IMAGE_NAME="my_drims2:local"
 
 # Pull the latest image (commented out for local builds)
 echo "Pulling the latest image: $IMAGE_NAME..."
-docker pull $IMAGE_NAME
-# docker run $IMAGE_NAME
+# docker pull $IMAGE_NAME
+docker run $IMAGE_NAME
 
 # Grant X server permissions to root for GUI applications in the container
 xhost +local:root

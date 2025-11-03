@@ -1,0 +1,2 @@
+# Test gripper commands
+ros2 action send_goal /gripper_action control_msgs/action/GripperCommand "{command: {position: 0.055, max_effort: 50.0}}"

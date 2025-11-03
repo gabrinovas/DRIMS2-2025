@@ -1,0 +1,5 @@
+repositories:
+  skeleton_trajectory:
+    type: git
+    url: https://github.com/gabrinovas/skeleton_trajectory.git
+    version: ros2

@@ -1,0 +1,129 @@
+# Stage 1: Base dependencies
+FROM ros:humble-perception AS base-dependencies
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set timezone to UTC to avoid tzdata interactive prompt during build
+RUN echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections \
+ && echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections
+
+# Install base tools, ROS2 Control, MoveIt, camera, and other dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential nano tmux iputils-ping gdb cmake git \
+    openssl libssl-dev libmysqlclient-dev xvfb \
+    python3-colcon-common-extensions \
+    python3-pip \
+    libboost-all-dev \
+    ros-humble-ros2-control ros-humble-ros2-controllers \
+    ros-humble-moveit ros-humble-depthai-ros ros-humble-moveit-ros-control-interface \
+    ros-humble-behaviortree-cpp* ros-humble-ros-testing freeglut3-dev ros-humble-moveit-resources-* \
+    ros-humble-realsense2-camera \
+    ros-humble-ur-* \
+    ros-humble-omni-base* ros-humble-play-motion2 ros-humble-diagnostic-aggregator ros-humble-gazebo*\
+    libprotobuf-dev protobuf-compiler ros-humble-tf* \
+    ros-humble-rmw-cyclonedds-cpp \
+    net-tools iproute2 \
+    libnet-dev* \
+    # ROS2 Control packages for grippers and controllers
+    ros-humble-gripper-controllers \
+    ros-humble-position-controllers \
+    ros-humble-effort-controllers \
+    ros-humble-joint-trajectory-controller \
+    ros-humble-controller-manager \
+    ros-humble-joint-state-broadcaster \
+    ros-humble-moveit-ros-occupancy-map-monitor \
+    ros-humble-xacro \
+    ros-humble-robot-state-publisher \
+    ros-humble-rviz2 \
+    ros-humble-moveit-visual-tools \
+    ros-humble-moveit-simple-controller-manager \
+    ros-humble-moveit-ros-move-group \
+    ros-humble-moveit-ros-occupancy-map-monitor \
+    ros-humble-moveit-ros-perception \
+    # Minimal additions for OnRobot gripper support and networking
+    libmodbus-dev \
+    netcat-openbsd \
+    tcpdump \
+    ros-humble-hardware-interface \
+    ros-humble-controller-interface \
+    ros-humble-controller-manager \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
+    python3-pymodbus \
+    netcat-openbsd \
+    iputils-ping \
+    # RealSense camera dependencies only (HIK camera removed)
+    ros-humble-image-transport \
+    ros-humble-camera-calibration-parsers \
+    ros-humble-vision-msgs \
+    ros-humble-image-pipeline \
+    ros-humble-rqt-image-view \
+    ros-humble-cv-bridge \
+    ros-humble-camera-info-manager \
+    # GStreamer for general video support
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-tools \
+    gstreamer1.0-libav \
+    # Additional system dependencies
+    libnotify-dev \
+    usbutils \
+    # Aravis camera dependencies
+    libaravis-dev \
+    aravis-tools
+
+# Install additional Python and C++ dependencies, and yq binary for YAML processing
+RUN apt-get install -y python3-colcon-common-extensions python3-pybind11 cmake libmodbus-dev libmongoclient-dev wget \
+    # Alternative yq download (commented out)
+    # && wget https://github.com/mikefarah/yq/releases/download/v4.35.1/yq_linux_amd64 -O /usr/bin/yq \
+    && wget https://github.com/gabrinovas/tools-binaries/raw/main/yq_linux_amd64 -O /usr/bin/yq \
+    && chmod +x /usr/bin/yq
+
+# Install essential Python packages for robotics and OnRobot support
+RUN pip3 install --no-cache-dir \
+    scipy \
+    depthai \
+    trimesh \
+    transforms3d \
+    ur_rtde \
+    pyyaml \
+    lark \
+    pymodbus \ 
+    pyserial \
+    opencv-python \
+    Pillow \
+    requests \
+    numpy-stl \
+    pandas \
+    matplotlib \
+    pytest-dependency \
+    scikit-learn \
+    mediapipe
+
+# Install rqt tools for ROS2 visualization
+RUN apt-get update && apt-get install -y \
+    ros-humble-rqt \
+    ros-humble-rqt-tf-tree \
+    ros-humble-rqt-image-view \
+    ros-humble-rqt-reconfigure
+
+# Ensure numpy version compatibility
+RUN python3 -m pip install "numpy<2"
+
+# --- Groot installation section ---
+
+# # Optionally copy local Groot installer (commented out)
+# COPY Groot2-v1.6.1-linux-installer.run /home/$USER_NAME/static/drims2_ws/src/Groot2-v1.6.1-linux-installer.run
+
+# # Optionally download Groot installer from official website (commented out)
+# RUN wget https://s3.us-west-1.amazonaws.com/download.behaviortree.dev/groot2_linux_installer/Groot2-v1.6.1-linux-installer.run
+
+# Download Groot installer from GitHub (alternative link)
+RUN wget https://github.com/gabrinovas/tools-binaries/raw/main/Groot2-v1.6.1-linux-installer.run
+
+# Make Groot installer executable and install Groot to /opt/groot
+RUN chmod +x Groot2-v1.6.1-linux-installer.run
+RUN ./Groot2-v1.6.1-linux-installer.run install --root /opt/groot --accept-licenses --default-answer --confirm-command
+RUN ln -s /opt/groot/bin/groot2 /usr/local/bin/groot
