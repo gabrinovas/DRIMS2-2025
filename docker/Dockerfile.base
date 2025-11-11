@@ -52,6 +52,11 @@ RUN apt-get update && apt-get install -y \
     python3-pymodbus \
     netcat-openbsd \
     iputils-ping \
+    # Test assets that include fake components
+    ros-humble-ros2-control-test-assets \
+    # Additional networking tools for OnRobot
+    net-tools \
+    iproute2 \
     # RealSense camera dependencies only (HIK camera removed)
     ros-humble-image-transport \
     ros-humble-camera-calibration-parsers \

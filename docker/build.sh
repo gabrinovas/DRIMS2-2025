@@ -22,8 +22,36 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Clean application images if requested
-if [ "$CLEAN_APP" = true ]; then
+# Prune Docker images and containers if rebuild-base is requested
+if [ "$REBUILD_BASE" = true ]; then
+    echo "🧹 Pruning Docker system for base rebuild..."
+    
+    # Stop and remove drims2 container if it exists
+    if docker ps -a | grep -q drims2; then
+        echo "Stopping and removing drims2 container..."
+        docker rm -f drims2 2>/dev/null || true
+    fi
+    
+    # Remove all application images (including base)
+    echo "Removing all drims2 images..."
+    docker images | grep "gabrinovas/drims2" | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || true
+    
+    # More aggressive cleanup
+    echo "Removing all dangling images..."
+    docker image prune -f
+    
+    echo "Removing all unused containers..."
+    docker container prune -f
+    
+    echo "Removing all unused images..."
+    docker image prune -a -f
+    
+    echo "Removing build cache..."
+    docker builder prune -f
+fi
+
+# Clean application images if requested (only if not already done by rebuild-base)
+if [ "$CLEAN_APP" = true ] && [ "$REBUILD_BASE" = false ]; then
     echo "🧹 Cleaning application images..."
     
     # Stop and remove container if it exists
@@ -64,12 +92,11 @@ docker build \
 echo "✅ Build successful!"
 
 echo "🚚 Pushing images to Docker Hub..."
-docker push gabrinovas/drims2-base:latest
+# docker push gabrinovas/drims2-base:latest
 # docker push gabrinovas/drims2:driver_trial
-
 echo "✅ Push successful!"
 
 # Usage examples:
 # ./build.sh                    # Normal build, reuse base if exists
 # ./build.sh --clean-app        # Clean app only, reuse base
-# ./build.sh --rebuild-base     # Rebuild both base and app
+# ./build.sh --rebuild-base     # Rebuild both base and app (with full cleanup)

@@ -39,6 +39,38 @@ RUN yq 'del(.repositories."abb_libs/abb_librws_2.0", .repositories."abb_libs/abb
     drims2_cells/deps.repos > drims2_cells/deps.filtered.repos
 RUN vcs import < drims2_cells/deps.filtered.repos
 
+# --- Clone OnRobot ROS2 repositories ---
+RUN git clone https://github.com/gabrinovas/UR_OnRobot_ROS2.git
+RUN git clone https://github.com/gabrinovas/OnRobot_ROS2_Description.git
+RUN git clone https://github.com/gabrinovas/OnRobot_ROS2_Driver.git
+
+# Initialize and update the Modbus submodule
+RUN cd OnRobot_ROS2_Driver && \
+    echo "Initializing and updating Modbus submodule..." && \
+    git submodule init && \
+    git submodule update --init --recursive
+
+# Fix the ambiguous constructor issue in FG.hpp
+RUN cd OnRobot_ROS2_Driver && \
+    echo "Fixing ambiguous constructor in FG.hpp..." && \
+    sed -i 's/FG(const std::string \&type, const std::string \&ip, int port, int device_address = 65);/FG(const std::string \&type, const std::string \&ip, int port, int device_address);/' include/onrobot_driver/FG.hpp && \
+    sed -i 's/FG(const std::string \&type, const std::string \&device, int device_address = 65);/FG(const std::string \&type, const std::string \&device, int device_address);/' include/onrobot_driver/FG.hpp
+
+# Also fix the constructor calls in FG.cpp to be explicit
+RUN cd OnRobot_ROS2_Driver && \
+    echo "Fixing FG.cpp constructor calls..." && \
+    sed -i 's/gripper_ = std::make_unique<FG>(onrobot_type_, ip_address_, port_, device_address_);/gripper_ = std::make_unique<FG>(onrobot_type_, ip_address_, port_, device_address_);/' src/FG.cpp && \
+    sed -i 's/gripper_ = std::make_unique<FG>(onrobot_type_, device_, device_address_);/gripper_ = std::make_unique<FG>(onrobot_type_, device_, device_address_);/' src/FG.cpp
+
+# Check if the Modbus submodule was properly initialized
+RUN cd OnRobot_ROS2_Driver && \
+    echo "=== Checking Modbus submodule status ===" && \
+    git submodule status && \
+    echo "=== Modbus directory contents ===" && \
+    ls -la include/onrobot_driver/Modbus/ && \
+    echo "=== Checking for CMakeLists.txt in Modbus ===" && \
+    find include/onrobot_driver/Modbus -name "CMakeLists.txt" -o -name "*.cmake" | head -10
+
 # Import additional workspace dependencies
 COPY workspace.repos /home/$USER_NAME/static/drims2_ws/src/workspace.repos
 RUN vcs import < workspace.repos
@@ -50,9 +82,18 @@ RUN chown -R $USER_NAME:$GROUP_NAME /home/$USER_NAME
 USER $USER_NAME
 WORKDIR /home/$USER_NAME/static/drims2_ws
 
-# Build the entire workspace with Release configuration
+# First, build the description packages that onrobot_driver depends on
 SHELL ["/bin/bash", "-c"]
-RUN source /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+RUN source /opt/ros/humble/setup.bash && \
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select onrobot_description --event-handlers console_direct+
+
+# Now build the onrobot_driver with its dependencies available
+RUN source /opt/ros/humble/setup.bash && \
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select onrobot_driver --event-handlers console_direct+
+
+# Now build the rest of the workspace
+RUN source /opt/ros/humble/setup.bash && \
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # Create a test script to verify bag creation
 RUN echo '#!/bin/bash\nros2 bag record -o /home/drims/bags/test_bag /rosout' > /home/$USER_NAME/test_bag_creation.sh && \
