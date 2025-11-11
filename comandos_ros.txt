@@ -1,0 +1,15 @@
+ros2 launch onrobot_driver onrobot_control.launch.py onrobot_type:=2fg7
+
+ros2 launch ur_onrobot_control start_robot.launch.py use_fake_hardware:=false onrobot_type:=2fg7 ur_type:=ur5e
+
+ros2 launch ur_onrobot_description view_robot.launch.py use_fake_hardware:=true onrobot_type:=2fg7 ur_type:=ur5e
+
+ros2 launch ur_onrobot_control start_robot.launch.py use_fake_hardware:=true onrobot_type:=2fg7
+
+ros2 launch ur_onrobot_control start_robot_with_environment.launch.py use_fake_hardware:=true onrobot_type:=2fg7
+
+ros2 launch ur_workspace_description view_platform.launch.py use_fake_hardware:=true onrobot_type:=2fg7 ur_type:=ur5e
+
+ros2 launch ur_workspace_description view_platform.launch.py use_fake_hardware:=true onrobot_type:=2fg7 ur_type:=ur5e gripper_ip:=192.168.1.1 gripper_port:=502 gripper_device_address:=65
+
+ros2 topic pub /onrobot/finger_width_controller/commands std_msgs/msg/Float64MultiArray "data: [0.07]"
